@@ -84,7 +84,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     formData.append("file", file);
   
     try {
-      const response = await fetch("http://127.0.0.1:50505/upload", {
+      const response = await fetch("/upload", {
         method: "POST",
         body: formData,
       });

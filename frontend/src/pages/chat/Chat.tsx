@@ -760,7 +760,7 @@ const Chat = () => {
   const clearVector = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:50505/clear-vector", {
+      const response = await fetch("/clear-vector", {
         method: "POST",
       });
       if (response.ok) {
