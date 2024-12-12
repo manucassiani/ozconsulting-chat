@@ -757,6 +757,24 @@ const Chat = () => {
     )
   }
 
+  const clearVector = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:50505/clear-vector", {
+        method: "POST",
+      });
+      if (response.ok) {
+        console.log("Vector cleaned successfully!");
+      } else {
+        console.error("Failed to clean the vector.");
+      }
+    } catch (error) {
+      console.error("Error cleaning the vector:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -893,6 +911,32 @@ const Chat = () => {
                     aria-label="start a new chat button"
                   />
                 )}
+                {/* Clear Vector Button */}
+                <CommandBarButton
+                  role="button"
+                  styles={{
+                    icon: {
+                      color: '#FFFFFF',
+                    },
+                    iconDisabled: {
+                      color: '#BDBDBD !important',
+                    },
+                    root: {
+                      color: '#FFFFFF',
+                      background:
+                        'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
+                    },
+                    rootDisabled: {
+                      background: '#F0F0F0',
+                    },
+                  }}
+                  className={styles.clearVectorIcon}
+                  iconProps={{ iconName: 'Delete' }}
+                  onClick={clearVector}
+                  disabled={false}
+                  aria-label="Clear vector button"
+                />
+                {/* END Clear Vector Button */}                
                 <CommandBarButton
                   role="button"
                   styles={{
