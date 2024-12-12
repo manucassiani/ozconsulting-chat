@@ -19,7 +19,8 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
-  const [base64Image, setBase64Image] = useState<string | null>(null);
+  const [base64Image, setBase64Image] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState<boolean>(false); // Estado para manejar el proceso de subida
 
   const appStateContext = useContext(AppStateContext)
   const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false;
@@ -72,6 +73,36 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     setQuestion(newValue || '')
   }
 
+  /* New constant */
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+  
+    setIsUploading(true); // Activa el estado de carga
+
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await fetch("http://127.0.0.1:50505/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        console.log("File uploaded:", data);
+      } else {
+        console.error("Upload failed:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      setIsUploading(false); // Desactiva el estado de carga
+    }
+  };
+  /* END New constant */
+
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
@@ -85,7 +116,36 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         value={question}
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
+        disabled={isUploading || disabled} // Deshabilitar mientras se está subiendo el archivo
       />
+      {/* Upload file button */}
+      <div className={styles.fileInputContainer}>
+        <input
+          type="file"
+          id="fileUpload"
+          onChange={(event) => handleFileUpload(event)}
+          className={styles.fileInput}
+          accept=".pdf,.doc,.docx,.txt"
+          disabled={isUploading} // Deshabilitar mientras se sube
+        />
+        <label htmlFor="fileUpload" className={styles.fileLabel} aria-label="Upload File">
+          {isUploading ? (
+            <FontIcon
+              className={styles.fileIcon}
+              iconName="Sync" // Ícono de carga
+              aria-label="Uploading..."
+              style={{ animation: "spin 2s linear infinite" }} // Animación de giro
+            />
+          ) : (
+            <FontIcon
+              className={styles.fileIcon}
+              iconName="CloudUpload"
+              aria-label="Upload File"
+            />
+          )}
+        </label>
+      </div>
+      {/*END Upload file button */}
       {!OYD_ENABLED && (
         <div className={styles.fileInputContainer}>
           <input

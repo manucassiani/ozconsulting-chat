@@ -94,3 +94,46 @@
 .uploadedImage {
   margin-right: 70px;
 }
+
+
+/* Container for the file upload button */
+.fileInputContainer {
+  position: absolute;
+  right: 24px;
+  bottom: 60px;
+}
+
+/* Hides the actual file input element */
+.fileInput {
+  display: none;
+}
+
+/* Styles for the file upload label (acts as the visible button) */
+.fileLabel {
+  display: inline-block;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Icon styles */
+.fileIcon {
+  font-size: 20px;
+  color: #424242;
+}
+
+/* Spin animation for the uploading icon */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Changes the icon color during upload */
+.fileIcon[aria-label="Uploading..."] {
+  color: #0078d4;
+}
