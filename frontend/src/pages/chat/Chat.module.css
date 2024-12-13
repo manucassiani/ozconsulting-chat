@@ -408,9 +408,9 @@ a {
   position: absolute;
   width: 40px;
   height: 40px;
-  left: 0px;
-  top: 0px;
-  color: #5a0e4d;
+  left: 7px;
+  top: 13px;
+  color: #ffffff;
   border-radius: 4px;
   z-index: 1;
 }
