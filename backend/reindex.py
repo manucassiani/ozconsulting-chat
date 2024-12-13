@@ -25,27 +25,40 @@ BLOB_CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME")
 SEARCH_ENDPOINT = f"https://{SEARCH_SERVICE_NAME}.search.windows.net"
 BLOB_ENDPOINT = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net"
 
+blob_service_client = BlobServiceClient(
+    account_url=BLOB_ENDPOINT, credential=STORAGE_ACCOUNT_KEY
+)
 
-def update_index():
-    """Runs the indexer and updates the index with the files that are stored in the blob storage."""
 
+def upload_to_blob_storage(file):
+    """Sube el archivo a Azure Blob Storage."""
+    try:
+        blob_client = blob_service_client.get_blob_client(
+            container=BLOB_CONTAINER_NAME, blob=file.filename
+        )
+        blob_client.upload_blob(file.stream, overwrite=True)
+        logging.info(f"File {file.filename} successfully uploaded to Blob Storage.")
+    except Exception as e:
+        logging.error(f"Failed to upload file to Blob Storage: {str(e)}")
+        raise
+
+
+def trigger_index_update():
+    """Ejecuta el trigger del indexador de Azure Cognitive Search."""
     try:
         url = f"{SEARCH_ENDPOINT}/indexers/{INDEXER_NAME}/run?api-version=2020-06-30"
         headers = {"Content-Type": "application/json", "api-key": ADMIN_KEY}
         response = requests.post(url, headers=headers)
-        if response.status_code == 202:
-            logging.debug("Indexer triggered successfully.")
-        else:
-            logging.error(
-                f"Failed to run the indexer: {response.status_code}, {response.text}"
+
+        if response.status_code != 202:
+            raise ValueError(
+                f"Failed to run indexer: {response.status_code}, {response.text}"
             )
-            return {
-                "status": "error",
-                "details": f"{response.status_code}: {response.text}",
-            }
+
+        logging.info("Indexer triggered successfully.")
     except Exception as e:
-        logging.error(f"Error while running the indexer: {str(e)}")
-        return {"status": "error", "details": str(e)}
+        logging.error(f"Failed to trigger index update: {str(e)}")
+        raise
 
 
 def delete_all_blobs():

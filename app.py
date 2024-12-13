@@ -33,8 +33,12 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 from azure.storage.blob import BlobServiceClient
-from backend.reindex import update_index, delete_all_blobs, recreate_index
-from dotenv import load_dotenv
+from backend.reindex import (
+    upload_to_blob_storage,
+    trigger_index_update,
+    delete_all_blobs,
+    recreate_index,
+)
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -61,53 +65,31 @@ def create_app():
 
 ### --- NEW CODE --- ###
 
-# load env variabls
-load_dotenv()
-
-# Configuration of Blob Storage
-BLOB_ENDPOINT = os.getenv("BLOB_ENDPOINT")
-STORAGE_ACCOUNT_KEY = os.getenv("STORAGE_ACCOUNT_KEY")
-BLOB_CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME")
-
-blob_service_client = BlobServiceClient(
-    account_url=BLOB_ENDPOINT, credential=STORAGE_ACCOUNT_KEY
-)
-
 
 @bp.route("/upload", methods=["POST"])
 async def upload_file():
-    """Endpoint to upload files to Azure Blob Storage and update the Azure Cognitive Search index."""
-    if "file" not in (await request.files):
-        return {"error": "File part is missing from the request"}, 400
-
-    file = (await request.files)["file"]
-    if file.filename == "":
-        return {"error": "No file selected for upload"}, 400
-
+    """Endpoint to upload files to Azure Blob Storage and trigger Azure Cognitive Search index update."""
     try:
-        # Upload files to Blob Storage
-        blob_client = blob_service_client.get_blob_client(
-            container=BLOB_CONTAINER_NAME, blob=file.filename
-        )
-        blob_client.upload_blob(file.stream, overwrite=True)
-        logging.info(f"File {file.filename} successfully uploaded to Blob Storage.")
+        # Get file
+        files = await request.files  # Asegúrate de await
+        if "file" not in files or not files["file"].filename:
+            raise ValueError("No file provided or file name is empty.")
+        file = files["file"]
 
-        # Update index
-        index_response = update_index()
-        if index_response["status"] == "success":
-            return {
-                "message": "File uploaded and search index updated successfully",
-                "filename": file.filename,
-                "index_details": index_response["details"],
-            }, 200
-        else:
-            return {
-                "message": "File uploaded, but updating the search index failed.",
-                "filename": file.filename,
-                "index_error": index_response["details"],
-            }, 500
+        # Subir el archivo al blob storage
+        upload_to_blob_storage(file)
+
+        # Ejecutar el trigger del indexador
+        trigger_index_update()
+
+        return {
+            "message": "File uploaded and search index updated successfully",
+            "filename": file.filename,
+        }, 200
+
     except Exception as e:
-        return {"error": f"Error uploading file: {str(e)}"}, 500
+        logging.error(f"Error during file upload or index update: {str(e)}")
+        return {"error": f"Internal server error: {str(e)}"}, 500
 
 
 @bp.route("/clear-vector", methods=["POST"])
