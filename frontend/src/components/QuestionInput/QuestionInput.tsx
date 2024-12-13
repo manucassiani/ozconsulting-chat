@@ -84,7 +84,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     formData.append("file", file);
   
     try {
-      const response = await fetch("ozconsulting-web-app.azurewebsites.net/upload", {
+      const response = await fetch("https://ozconsulting-web-app.azurewebsites.net/upload", {
         method: "POST",
         body: formData,
       });
