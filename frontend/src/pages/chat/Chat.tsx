@@ -760,7 +760,7 @@ const Chat = () => {
   const clearVector = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("https://ozconsulting-web-app.azurewebsites.net/clear-vector", {
+      const response = await fetch("http://ozconsulting-web-app.azurewebsites.net/clear-vector", {
         method: "POST",
       });
       if (response.ok) {
